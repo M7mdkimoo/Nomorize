@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Sparkles, Bot, X, Minimize2, Phone, Mic, MicOff, FileText, Image as ImageIcon, Video, ScanText } from 'lucide-react';
+import { Send, Sparkles, Bot, X, Minimize2, Phone, Mic, MicOff, FileText, Image as ImageIcon, Video, ScanText, Volume2, VolumeX } from 'lucide-react';
 import { ChatMessage, Memory, MemoryType } from '../types';
 import { CortexService } from '../services/cortexService';
 
@@ -43,6 +43,10 @@ const CortexChat: React.FC<CortexChatProps> = ({
   // Voice typing states
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef<any>(null);
+
+  // Text-to-speech states
+  const [isTTSEnabled, setIsTTSEnabled] = useState(true);
+  const speechSynthesisRef = useRef<SpeechSynthesis | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -93,6 +97,9 @@ const CortexChat: React.FC<CortexChatProps> = ({
 
         setIsThinking(false);
         setMessages(prev => [...prev, response]);
+        if (response.sender === 'cortex') {
+          speakText(response.text);
+        }
         if (onClearAction) onClearAction();
       };
 
@@ -127,6 +134,11 @@ const CortexChat: React.FC<CortexChatProps> = ({
         setIsListening(false);
       };
     }
+
+    // Initialize Speech Synthesis
+    if ('speechSynthesis' in window) {
+      speechSynthesisRef.current = window.speechSynthesis;
+    }
   }, []);
 
   const toggleListening = () => {
@@ -140,6 +152,28 @@ const CortexChat: React.FC<CortexChatProps> = ({
     } else {
       recognitionRef.current.start();
       setIsListening(true);
+    }
+  };
+
+  const speakText = (text: string) => {
+    if (!speechSynthesisRef.current || !isTTSEnabled) return;
+
+    // Cancel any ongoing speech
+    speechSynthesisRef.current.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 1.0;
+    utterance.pitch = 1.0;
+    utterance.volume = 0.8;
+
+    speechSynthesisRef.current.speak(utterance);
+  };
+
+  const toggleTTS = () => {
+    setIsTTSEnabled(!isTTSEnabled);
+    if (isTTSEnabled) {
+      // Stop any ongoing speech when disabling
+      speechSynthesisRef.current?.cancel();
     }
   };
 
@@ -163,6 +197,9 @@ const CortexChat: React.FC<CortexChatProps> = ({
 
     setIsThinking(false);
     setMessages(prev => [...prev, response]);
+    if (response.sender === 'cortex') {
+      speakText(response.text);
+    }
 
     if (response.relatedMemoryIds && response.relatedMemoryIds.length > 0) {
       onHighlightMemories(response.relatedMemoryIds);
@@ -219,6 +256,13 @@ const CortexChat: React.FC<CortexChatProps> = ({
         {isExpanded && (
           <div className="flex items-center space-x-1">
             <button
+              onClick={toggleTTS}
+              className={`p-1.5 rounded-lg transition-colors text-white/90 ${isTTSEnabled ? 'bg-white/20' : 'hover:bg-white/20'}`}
+              title={isTTSEnabled ? "Disable Text-to-Speech" : "Enable Text-to-Speech"}
+            >
+              {isTTSEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+            </button>
+            <button
               onClick={startVoiceChat}
               className="p-1.5 hover:bg-white/20 rounded-lg transition-colors text-white/90"
               title="Start Voice Chat (Coming Soon)"
@@ -226,10 +270,10 @@ const CortexChat: React.FC<CortexChatProps> = ({
               <Phone className="w-4 h-4" />
             </button>
             <div className="w-px h-4 bg-white/20 mx-1" />
-            <button onClick={() => setIsExpanded(false)} className="p-1.5 hover:bg-white/20 rounded-lg transition-colors">
+            <button onClick={() => setIsExpanded(false)} className="p-1.5 hover:bg-white/20 rounded-lg transition-colors" title="Minimize">
               <Minimize2 className="w-4 h-4" />
             </button>
-            <button onClick={handleClose} className="p-1.5 hover:bg-white/20 rounded-lg transition-colors">
+            <button onClick={handleClose} className="p-1.5 hover:bg-white/20 rounded-lg transition-colors" title="Close">
               <X className="w-4 h-4" />
             </button>
           </div>
@@ -328,6 +372,7 @@ const CortexChat: React.FC<CortexChatProps> = ({
                 type="submit"
                 disabled={!input.trim() || isThinking}
                 className="p-2 bg-cortex-600 text-white rounded-full hover:bg-cortex-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                title="Send message"
               >
                 <Send className="w-4 h-4" />
               </button>
