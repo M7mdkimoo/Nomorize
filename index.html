@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nomorize</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              brand: {
+                50: '#f0fdfa',
+                100: '#ccfbf1',
+                200: '#99f6e4',
+                300: '#5eead4',
+                400: '#2dd4bf',
+                500: '#14b8a6',
+                600: '#0d9488',
+                700: '#0f766e',
+                800: '#115e59',
+                900: '#134e4a',
+              },
+              cortex: {
+                50: '#f5f3ff',
+                100: '#ede9fe',
+                500: '#8b5cf6',
+                600: '#7c3aed',
+                900: '#4c1d95',
+              }
+            },
+            animation: {
+              'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            }
+          },
+        },
+      };
+    </script>
+</head>
+  <body class="bg-slate-50 text-slate-900 dark:bg-slate-900 dark:text-slate-50 transition-colors duration-300">
+    <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>

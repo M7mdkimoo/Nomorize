@@ -1,0 +1,7 @@
+{
+  "name": "Nomorize",
+  "description": "A smart personal memory assistant with a simulated AI named Cortex. Store text, images, and thoughts in a temporary browser session.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
